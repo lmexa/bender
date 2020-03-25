@@ -13,7 +13,6 @@ __pycache__/
 *.db
 .DS_Store
 .idea/
-bender/select_db.py
 
 # Distribution / packaging
 .Python
