@@ -85,7 +85,8 @@ def handle_message(service, type_msg, file, db_file):
             if parent_path:
                 new_path = parent_path[0] + '/' + name
             else:
-                new_path = name
+                new_tree = return_new_tree(service)
+                new_path = new_tree.get(id).lower().strip()
             message['new_path'] = new_path
             insert_to_files_table(id, name, parent_id, new_path, web_content_link,
                                   web_view_link, created_time, modified_time, False, last_user)
