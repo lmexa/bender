@@ -72,7 +72,7 @@ def get_folders_from_paths(paths):
 def select_folders_from_files_table():
     conn = sqlite3.connect("bender/mediabuy.db")
     cursor = conn.cursor()
-    cursor.execute('SELECT full_path from files WHERE trashed=False;')
+    cursor.execute('SELECT full_path from files WHERE trashed=0;')
     all_paths = [x[0] for x in cursor.fetchall()]
     conn.commit()
     folders = get_folders_from_paths(all_paths)

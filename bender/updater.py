@@ -52,7 +52,7 @@ class DriveUpdater:
         files = get_files_list(self.service, q, fields)
         conn = sqlite3.connect("bender/mediabuy.db")
         cursor = conn.cursor()
-        query = "SELECT id, name, parent_id, full_path FROM files WHERE trashed=False "
+        query = "SELECT id, name, parent_id, full_path FROM files WHERE trashed=0 "
         print (query)
         cursor.execute(query)
         table_files = make_files_dict(cursor.fetchall())
