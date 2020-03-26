@@ -61,7 +61,7 @@ def handle_user_email(update, context):
 def add_user_folders(update, context):
     chat_id = update.effective_chat.id
     user_folders = select_folders_from_users_table(chat_id).split(',')
-    all_folders = select_folders_from_files_table().split(',')
+    all_folders = select_folders_from_files_table()
     folders_to_choose = set(all_folders).difference(set(user_folders))
     filtered_folders_to_choose = list(filter(lambda x: len(x.split('/')) <= 2, folders_to_choose))
     folders_text = '\n'.join(filtered_folders_to_choose)
