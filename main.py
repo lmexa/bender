@@ -31,9 +31,11 @@ def registration(update, context):
     if not context.user_data.get('new'):
         if chat_id not in known_chats:
             context.user_data['new'] = True
+            context.bot.send_message(chat_id=chat_id, text=INSERT_EMAIL)
         else:
             context.user_data['new'] = False
-    context.bot.send_message(chat_id=chat_id, text=INSERT_EMAIL)
+    else:
+        context.bot.send_message(chat_id=chat_id, text=INSERT_EMAIL)
     return EMAIL
 
 
@@ -76,7 +78,7 @@ def handle_user_folder(update, context):
     paths_text = user_text.lower().strip()
     paths = list(map(lambda x: x.strip(), paths_text.split(',')))
     clean_paths = ','.join(paths)
-    if context.user_data['new']:
+    if context.user_data.get('new') and context.user_data['new']:
         update_users_table(clean_paths, chat_id)
         context.user_data['new'] = False
     else:
