@@ -1,5 +1,10 @@
+import logging
+import time
+from googleapiclient.errors import HttpError
 from bender.sql_utils import update_files_table, update_tree, insert_to_files_table, \
     get_iso_datetime, select_file_path_by_id
+
+logger = logging.getLogger(__name__)
 
 
 def get_files_list(service, query, fields):
@@ -7,15 +12,19 @@ def get_files_list(service, query, fields):
     files = []
     page_token = None
     while True:
-        response = service.files().list(q=query,
-                                        spaces='drive',
-                                        fields=fields,
-                                        pageToken=page_token).execute()
-        for file in response.get('files', []):
-            files.append(file)
-        page_token = response.get('nextPageToken', None)
-        if page_token is None:
-            break
+        try:
+            response = service.files().list(q=query,
+                                            spaces='drive',
+                                            fields=fields,
+                                            pageToken=page_token).execute()
+            for file in response.get('files', []):
+                files.append(file)
+            page_token = response.get('nextPageToken', None)
+            if page_token is None:
+                break
+        except HttpError as e:
+            logger.error(e)
+            time.sleep(2)
     return files
 
 
