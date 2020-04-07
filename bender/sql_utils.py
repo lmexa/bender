@@ -151,6 +151,17 @@ def select_view_link(full_path):
     return link
 
 
+def select_nick_by_email(email):
+    conn = sqlite3.connect("bender/mediabuy.db")
+    sql = ''' SELECT telegram_nick from users WHERE email = ?;
+            '''
+    cursor = conn.cursor()
+    task = (email,)
+    cursor.execute(sql, task)
+    nick = cursor.fetchone()
+    return nick
+
+
 def make_files_dict(files):
     total_dict = {}
     for file in files:

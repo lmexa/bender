@@ -1,3 +1,6 @@
+from bender.sql_utils import select_nick_by_email
+
+
 GREETINGS = """
 Привет! Я бот, помогающий следить за обновлениями (создание нового файла, изменение и удаление) на google-drive. 
 Список моих команд:
@@ -39,12 +42,13 @@ HELP = """
 
 def make_text_from_message(message):
     email = message.get('email')
+    nick = select_nick_by_email(email)
     type_msg = message.get('type')
     name = message.get('name')
     old_path = message.get('old_path')
     new_path = message.get('new_path')
     link = message.get('web_view_link')
-    text = f'File {name} has been {type_msg} by {email}\n'
+    text = f'File {name} has been {type_msg} by {email} ({"@"+nick if nick else ""})\n'
     text += f'New path: {new_path}\nOld path: {old_path}\n'
     text += f'View link: {link}'
     return text

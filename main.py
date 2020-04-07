@@ -20,7 +20,6 @@ def greet_user(update, context):
     if chat_id not in known_chats:
         logger.info(f'Start greeting user {chat_id}')
         context.bot.send_message(chat_id=chat_id, text=GREETINGS)
-        context.user_data['new'] = True
     else:
         context.bot.send_message(chat_id=chat_id, text=HAVE_ID_IN_BASE)
 
@@ -28,23 +27,21 @@ def greet_user(update, context):
 def registration(update, context):
     chat_id = update.effective_chat.id
     known_chats, _ = select_ids_from_user_table()
-    if not context.user_data.get('new'):
-        if chat_id not in known_chats:
-            context.user_data['new'] = True
-            context.bot.send_message(chat_id=chat_id, text=INSERT_EMAIL)
-        else:
-            context.user_data['new'] = False
-    else:
+    if chat_id not in known_chats:
         context.bot.send_message(chat_id=chat_id, text=INSERT_EMAIL)
+    else:
+        context.bot.send_message(chat_id=chat_id, text=HAVE_ID_IN_BASE)
     return EMAIL
 
 
 def handle_user_email(update, context):
     chat_id = update.effective_chat.id
+    known_chats, _ = select_ids_from_user_table()
     user_text = update.message.text
     text = user_text.lower().strip()
-    if context.user_data['new']:
+    if chat_id not in known_chats:
         if '@' in text:
+            logger.info(f'Inserting users info: {chat_id}..')
             telegram_nick = update.message.from_user.username
             folders = select_folders_from_files_table()
             folders_text = '\n'.join(folders)
@@ -68,23 +65,25 @@ def add_user_folders(update, context):
     filtered_folders_to_choose = list(filter(lambda x: len(x.split('/')) <= 2, folders_to_choose))
     folders_text = '\n'.join(filtered_folders_to_choose)
     context.bot.send_message(chat_id=chat_id,
-                             text='Запиши новые папки, за которыми хотите следить, через запятую\n' + folders_text)
+                             text='Запиши новые папки, за которыми хотите следить, через запятую:\n' + folders_text)
     return ADD_NEW_FOLDERS
 
 
 def handle_user_folder(update, context):
     chat_id = update.effective_chat.id
+    known_chats, _ = select_ids_from_user_table()
     user_text = update.message.text
     paths_text = user_text.lower().strip()
     paths = list(map(lambda x: x.strip(), paths_text.split(',')))
     clean_paths = ','.join(paths)
-    if context.user_data.get('new') and context.user_data['new']:
+    if chat_id not in known_chats:
+        logger.info(f'Inserting folders {clean_paths} of new user: {chat_id}..')
         update_users_table(clean_paths, chat_id)
-        context.user_data['new'] = False
     else:
         user_folders = select_folders_from_users_table(chat_id).split(',')
         total_folders = set(paths).union(set(user_folders))
         add_folders = ','.join(total_folders)
+        logger.info(f'Updating folders {clean_paths} of user: {chat_id}..')
         update_users_table(add_folders, chat_id)
     context.bot.send_message(chat_id=chat_id, text='Папки добавлены!')
     return ConversationHandler.END
@@ -95,7 +94,7 @@ def remove_user_folders(update, context):
     folders = select_folders_from_users_table(chat_id).split(',')
     folders_text = '\n'.join(folders)
     context.bot.send_message(chat_id=chat_id,
-                             text='Запиши папки, за которыми больше не хотите следить, через запятую\n' + folders_text)
+                             text='Запиши папки, за которыми больше не хотите следить, через запятую:\n' + folders_text)
     return REMOVE_FOLDERS
 
 
@@ -172,9 +171,9 @@ def process_message(message, user_id, user_folders_text):
 
 def send_push(context):
     drive_object = context.job.context
-    logger.info(f'Updating messages...')
+    logger.info(f'Updating info...')
     messages = drive_object.get_messages()
-    logger.info(f'Messages updated!')
+    logger.info(f'Messages updated!') if messages else logger.info(f'No Changes in Drive!')
     known_chats, known_paths = select_ids_from_user_table()
     for user_id, user_folders_text in zip(known_chats, known_paths):
         grouped_message = defaultdict(dict)
@@ -195,9 +194,11 @@ def send_push(context):
                     grouped_message[update_path][msg_type] = 0
         if len(texts) >= 3:
             text = make_text_from_grouped_message(grouped_message)
+            logger.info(f'Sending grouped message: {text} to {user_id}')
             context.bot.send_message(chat_id=str(user_id), text=text)
         else:
             for text in texts:
+                logger.info(f'Sending message: {text} to {user_id}')
                 context.bot.send_message(chat_id=str(user_id), text=text)
 
 
