@@ -64,7 +64,10 @@ def get_folders_from_paths(paths):
     folders = []
     for path in paths:
         # костыль для определения директорий :(
-        if len(path.split('/')[-1].split('.')) <= 2 and len(path.split('/')[-1].split('.')[-1]) != 3:
+        last_dir = path.split('/')[-1]
+        if len(last_dir.split('.')) >= 2 and len(last_dir.split('.')[-1]) == 3:
+            pass
+        else:
             folders.append(path)
     return folders
 
