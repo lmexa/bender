@@ -3,8 +3,8 @@ from bender.sql_utils import insert_to_users_table, select_ids_from_user_table, 
     select_folders_from_files_table, select_folders_from_users_table, delete_user_sql, is_path_child, select_view_link
 from bender.config import ConfigBender
 from bender.updater import DriveUpdater
-from bender.messages import GREETINGS, SUCCESS_REGISTRATION, HAVE_ID_IN_BASE, HELP, INSERT_EMAIL, NOT_EMAIL,\
-    make_text_from_message, make_text_from_grouped_message
+from bender.messages import GREETINGS, SUCCESS_REGISTRATION, DUMB_ANSWER, HAVE_ID_IN_BASE, HELP, INSERT_EMAIL,\
+    NOT_EMAIL, make_text_from_message, make_text_from_grouped_message
 from _collections import defaultdict
 import logging
 
@@ -140,6 +140,11 @@ def show_help(update, context):
     context.bot.send_message(chat_id=chat_id, text=HELP)
 
 
+def dont_understand(update, context):
+    chat_id = update.effective_chat.id
+    context.bot.send_message(chat_id=chat_id, text=DUMB_ANSWER+HELP)
+
+
 def process_message(message, user_id, user_folders_text):
     user_folders = user_folders_text.split(',')
     new_path = message.get('new_path')
@@ -242,6 +247,7 @@ def main():
     dp.add_handler(CommandHandler('delete', delete_user))
     dp.add_handler(CommandHandler('folders', show_folders))
     dp.add_handler(CommandHandler('help', show_help))
+    dp.add_handler(MessageHandler(Filters.text, dont_understand))
     bender_bot.start_polling()
     bender_bot.idle()
 

@@ -39,6 +39,9 @@ HELP = """
 /delete - удалить себя из пользователей бота
 """
 
+DUMB_ANSWER = """ Я вас не понимаю :( \n
+"""
+
 
 def make_text_from_message(message):
     email = message.get('email')
