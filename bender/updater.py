@@ -6,8 +6,8 @@ from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
-from bender.sql_utils import set_state, make_files_dict
-from bender.drive_utils import get_files_list, handle_message
+from bender.sql_utils import set_state, make_files_dict, insert_to_files_table
+from bender.drive_utils import get_files_list, handle_message, return_new_tree
 
 
 class DriveUpdater:
@@ -16,11 +16,26 @@ class DriveUpdater:
         self.credentials = config.credentials
         self.token_file = config.token_file
         self.service = self.build_service()
-        if config.reset_state:
-            self.state = '2012-01-04T12:00:00-08:00'
-        else:
-            self.state = set_state()
-        self.get_messages()
+        self.state = set_state()
+        # need to insert full tree
+        if config.reset_state or not self.state:
+            new_files = return_new_tree(self.service)
+            for id, file in new_files.items():
+                name = file.get('name')
+                parents = file.get('parents')
+                if parents:
+                    parent_id = parents[0]
+                else:
+                    parent_id = ''
+                web_view_link = file.get('webViewLink')
+                web_content_link = file.get('webContentLink')
+                created_time = file.get('createdTime')
+                modified_time = file.get('modifiedTime')
+                last_user = file.get('lastModifyingUser').get('emailAddress') if file.get('lastModifyingUser') else 'Somebody'
+                full_path = file.get('full_path')
+                insert_to_files_table(id, name, parent_id, full_path, web_content_link,
+                                      web_view_link, created_time, modified_time, False, last_user)
+                self.state = set_state()
 
     def build_service(self):
         creds = None

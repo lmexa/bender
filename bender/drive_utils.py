@@ -28,34 +28,35 @@ def get_files_list(service, query, fields):
     return files
 
 
-def get_folder_tree(service, folder_name, folder_id, root, total_dict):
+def get_folder_tree(service, folder, root, total_dict):
     if root != '':
-        root += '/' + folder_name
+        root += '/' + folder.get('name')
     else:
-        root += folder_name
-    total_dict[folder_id] = root
-    q = f"'{folder_id}' in parents and trashed=false"
-    fields = 'nextPageToken, files(id, name, parents)'
+        root += folder.get('name')
+    folder.update({'full_path': root.lower().strip()})
+    total_dict[folder.get('id')] = folder
+    id = folder.get('id')
+    q = f"'{id}' in parents and trashed=false"
+    fields = "nextPageToken, files(id, name, parents, trashed, webViewLink, webContentLink, createdTime, " \
+             "modifiedTime, lastModifyingUser) "
     files = get_files_list(service, q, fields)
     for file in files:
-        name = file.get('name')
-        id = file.get('id')
-        get_folder_tree(service, name, id, root, total_dict)
+        get_folder_tree(service, file, root, total_dict)
 
 
 def return_new_tree(service):
     # Return tree for specific drive
-    parsed_dict = {}  # dict of paths
+    parsed_dict = {}  # dict of files
     q = f'trashed=false'
-    fields = 'nextPageToken, files(id, name, parents)'
+    fields = "nextPageToken, files(id, name, parents, trashed, webViewLink, webContentLink, createdTime, " \
+             "modifiedTime, lastModifyingUser) "
     files = get_files_list(service, q, fields)
     for file in files:
         if not file.get('parents'):
-            id = file.get('id')
-            name = file.get('name')
             root = ''
-            parsed_dict[id] = root
-            get_folder_tree(service, name, id, root, parsed_dict)
+            file.update({'full_path': root.lower().strip()})
+            parsed_dict[file.get('id')] = file
+            get_folder_tree(service, file, root, parsed_dict)
     return parsed_dict
 
 
@@ -103,11 +104,11 @@ def handle_message(service, type_msg, file, db_file):
                                   web_view_link, created_time, modified_time, False, last_user)
         else:
             new_tree = return_new_tree(service)
-            new_path = new_tree.get(id).lower().strip()
+            new_path = new_tree.get(id).get('full_path')
             update_files_table(name, parent_id, new_path,
                                web_content_link, web_view_link,
                                created_time, modified_time, False, last_user, id)
             message['new_path'] = new_path
-            for id, path in new_tree.items():
-                update_tree(path.lower().strip(), id)
+            for id, file in new_tree.items():
+                update_tree(file.get('full_path'), id)
     return message

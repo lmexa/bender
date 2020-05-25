@@ -13,10 +13,7 @@ def set_state():
     query = "SELECT MAX(modified) FROM files"
     cursor.execute(query)
     result = cursor.fetchone()
-    if result[0] is None:
-        return '2012-01-04T12:00:00-08:00'
-    else:
-        return result[0]
+    return result[0]
 
 
 def update_files_table(name, parent_id, full_path, web_content_link, web_view_link, created, modified, trashed, email, id):
