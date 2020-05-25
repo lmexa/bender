@@ -44,6 +44,7 @@ def handle_user_email(update, context):
             logger.info(f'Inserting users info: {chat_id}..')
             telegram_nick = update.message.from_user.username
             folders = select_folders_from_files_table()
+            folders = list(filter(lambda x: len(x.split('/')) <= 3, folders))
             folders_text = '\n'.join(folders)
             paths = ''
             insert_to_users_table(text, telegram_nick, paths, chat_id)
