@@ -18,7 +18,7 @@ INSERT_EMAIL = """
 
 SUCCESS_REGISTRATION = """
 Отлично!
-А теперь выбери папки, за которыми будешь следить. Запиши их через запятую
+А теперь выбери папки, за которыми будешь следить. Запиши их через запятую:
 """
 
 NOT_EMAIL = """
@@ -51,7 +51,7 @@ def make_text_from_message(message):
     old_path = message.get('old_path')
     new_path = message.get('new_path')
     link = message.get('web_view_link')
-    text = f'File {name} has been {type_msg} by {email} ({"@"+nick if nick else ""})\n'
+    text = f'File {name} has been {type_msg} by {email} {"@"+nick if nick else ""}\n'
     text += f'New path: {new_path}\nOld path: {old_path}\n'
     text += f'View link: {link}'
     return text
@@ -65,3 +65,11 @@ def make_text_from_grouped_message(grouped_message):
                 text += f'In {folder} {count} files has been {update_type}\n'
         text += f'See changes by link: {updates.get("view_link")}\n\n'
     return text
+
+
+def make_pretty_folders_list(folders, depth_limit):
+    filtered_folders = []
+    for folder in folders:
+        if len(folder.split('/')) <= depth_limit:
+            filtered_folders.append(folder)
+    return sorted(filtered_folders)

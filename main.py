@@ -1,10 +1,8 @@
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler
-from bender.sql_utils import insert_to_users_table, select_ids_from_user_table, update_users_table, \
-    select_folders_from_files_table, select_folders_from_users_table, delete_user_sql, is_path_child, select_view_link
+from bender.sql_utils import *
 from bender.config import ConfigBender
 from bender.updater import DriveUpdater
-from bender.messages import GREETINGS, SUCCESS_REGISTRATION, DUMB_ANSWER, HAVE_ID_IN_BASE, HELP, INSERT_EMAIL,\
-    NOT_EMAIL, make_text_from_message, make_text_from_grouped_message
+from bender.messages import *
 from _collections import defaultdict
 import logging
 
@@ -43,8 +41,7 @@ def handle_user_email(update, context):
         if '@' in text:
             logger.info(f'Inserting users info: {chat_id}..')
             telegram_nick = update.message.from_user.username
-            folders = select_folders_from_files_table()
-            folders = list(filter(lambda x: len(x.split('/')) <= 3, folders))
+            folders = make_pretty_folders_list(select_folders_from_files_table(), 3)
             folders_text = '\n'.join(folders)
             paths = ''
             insert_to_users_table(text, telegram_nick, paths, chat_id)
@@ -63,10 +60,10 @@ def add_user_folders(update, context):
     user_folders = select_folders_from_users_table(chat_id).split(',')
     all_folders = select_folders_from_files_table()
     folders_to_choose = set(all_folders).difference(set(user_folders))
-    filtered_folders_to_choose = list(filter(lambda x: len(x.split('/')) <= 2, folders_to_choose))
+    filtered_folders_to_choose = make_pretty_folders_list(folders_to_choose, 3)
     folders_text = '\n'.join(filtered_folders_to_choose)
     context.bot.send_message(chat_id=chat_id,
-                             text='Запиши новые папки, за которыми хотите следить, через запятую:\n' + folders_text)
+                             text='Запиши новые папки, за которыми хотите следить, через перенос строки:\n' + folders_text)
     return ADD_NEW_FOLDERS
 
 
@@ -75,7 +72,7 @@ def handle_user_folder(update, context):
     known_chats, _ = select_ids_from_user_table()
     user_text = update.message.text
     paths_text = user_text.lower().strip()
-    paths = list(map(lambda x: x.strip(), paths_text.split(',')))
+    paths = list(map(lambda x: x.strip(), paths_text.split('\n')))
     clean_paths = ','.join(paths)
     if chat_id not in known_chats:
         logger.info(f'Inserting folders {clean_paths} of new user: {chat_id}..')
@@ -95,7 +92,7 @@ def remove_user_folders(update, context):
     folders = select_folders_from_users_table(chat_id).split(',')
     folders_text = '\n'.join(folders)
     context.bot.send_message(chat_id=chat_id,
-                             text='Запиши папки, за которыми больше не хотите следить, через запятую:\n' + folders_text)
+                             text='Запиши папки, за которыми больше не хотите следить, через перенос строки:\n' + folders_text)
     return REMOVE_FOLDERS
 
 
@@ -103,7 +100,7 @@ def handle_removing_folders(update, context):
     chat_id = update.effective_chat.id
     folders = select_folders_from_users_table(chat_id).split(',')
     user_text = update.message.text
-    folders_remove = user_text.lower().strip().split(',')
+    folders_remove = user_text.lower().strip().split('\n')
     folders_remove = list(map(lambda x: x.strip(), folders_remove))
     paths = ','.join(set(folders).difference(set(folders_remove)))
     update_users_table(paths, chat_id)
