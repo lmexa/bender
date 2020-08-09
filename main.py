@@ -209,7 +209,7 @@ def main():
     config = ConfigBender.load('bender/config.yaml')
     logging.basicConfig(**config.log.to_dict())
     drive = DriveUpdater(config)
-    bender_bot = Updater(token=config.token, request_kwargs=config.proxy, use_context=True)
+    bender_bot = Updater(token=config.token, use_context=True)
     j = bender_bot.job_queue
     job_message = j.run_repeating(send_push, interval=config.job_interval, first=0, context=drive)
     conv_handler_register = ConversationHandler(
