@@ -1,5 +1,5 @@
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler
-from bender.sql_utils import *
+from bender.sql import *
 from bender.config import ConfigBender
 from bender.updater import DriveUpdater
 from bender.messages import *

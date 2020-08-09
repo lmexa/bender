@@ -16,7 +16,8 @@ def set_state():
     return result[0]
 
 
-def update_files_table(name, parent_id, full_path, web_content_link, web_view_link, created, modified, trashed, email, id):
+def update_files_table(name, parent_id, full_path, web_content_link,
+                       web_view_link, created, modified, trashed, email, id):
     conn = sqlite3.connect("bender/mediabuy.db")
     sql = '''UPDATE files
             SET name = ? ,
@@ -30,7 +31,8 @@ def update_files_table(name, parent_id, full_path, web_content_link, web_view_li
             email = ?
             WHERE id = ?'''
     cursor = conn.cursor()
-    task = (name, parent_id, full_path, web_content_link, web_view_link, created, modified, trashed, email, id)
+    task = (name, parent_id, full_path, web_content_link,
+            web_view_link, created, modified, trashed, email, id)
     cursor.execute(sql, task)
     conn.commit()
 

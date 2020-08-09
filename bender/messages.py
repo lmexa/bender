@@ -1,4 +1,4 @@
-from bender.sql_utils import select_nick_by_email
+from bender.sql import select_nick_by_email
 
 
 GREETINGS = """

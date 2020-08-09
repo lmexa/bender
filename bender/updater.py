@@ -6,8 +6,8 @@ from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
-from bender.sql_utils import set_state, make_files_dict, insert_to_files_table
-from bender.drive_utils import get_files_list, handle_message, return_new_tree
+from bender.sql import set_state, make_files_dict, insert_to_files_table
+from bender.drive import get_files_list, handle_message, return_new_tree
 
 
 class DriveUpdater:
